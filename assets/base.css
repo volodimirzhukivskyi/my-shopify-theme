@@ -5,8 +5,8 @@
 body {
   color: var(--color-foreground);
   /* background: var(--color-background); */
-  background: red;
-  
+  background: red !important;
+
   display: flex;
   flex-direction: column;
   margin: 0;
