@@ -1,0 +1,25 @@
+name: Shopify Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Shopify CLI
+        run: npm install --save-dev @shopify/cli
+
+      - name: Deploy Theme
+        run: |
+          npx shopify theme push \
+            --store=${{ secrets.SHOPIFY_STORE }} \
+            --password=${{ secrets.SHOPIFY_PASSWORD }} \
+            --theme=${{ secrets.SHOPIFY_THEME_ID }} \
+            --allow-live

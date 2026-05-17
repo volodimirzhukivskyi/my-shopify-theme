@@ -1,1 +1,6 @@
 .shopify
+.env
+
+.DS_Store
+
+.shopify
