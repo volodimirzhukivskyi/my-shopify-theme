@@ -1,0 +1,240 @@
+{% liquid
+  assign background_image = section.settings.background_image
+  assign background_position = section.settings.background_position | default: 'center center'
+  assign product_blocks = section.blocks | where: 'type', 'product_card'
+%}
+
+<section
+  class="chambers-showcase"
+  style="
+    --chambers-showcase-bg-position: {{ background_position }};
+    {% if background_image != blank %}
+      --chambers-showcase-bg-image: url('{{ background_image | image_url: width: 2400 }}');
+    {% else %}
+      --chambers-showcase-bg-image: linear-gradient(135deg, #111 0%, #050505 55%, #181818 100%);
+    {% endif %}
+  "
+>
+  {% if product_blocks.size > 0 %}
+    <div class="chambers-showcase__products" aria-label="Products">
+      {% for block in product_blocks %}
+        {% liquid
+          assign card_product = block.settings.product
+          assign card_variant = card_product.selected_or_first_available_variant
+          assign card_image = block.settings.image
+          assign card_title = block.settings.title
+          assign card_subtitle = block.settings.subtitle
+          assign card_price = block.settings.price
+          assign card_url = block.settings.details_link
+
+          if card_image == blank and card_product.featured_image != blank
+            assign card_image = card_product.featured_image
+          endif
+
+          if card_title == blank and card_product.title != blank
+            assign card_title = card_product.title
+          endif
+
+          if card_title == blank
+            assign card_title = 'Grimdark Dark Elves Set'
+          endif
+
+          if card_subtitle == blank and card_product.vendor != blank
+            assign card_subtitle = card_product.vendor
+          endif
+
+          if card_subtitle == blank
+            assign card_subtitle = 'The Remade | 12 Ready-to-Paint Figures'
+          endif
+
+          if card_price == blank and card_product.price != blank
+            capture card_price
+              echo card_product.price | money
+            endcapture
+          endif
+
+          if card_price == blank
+            assign card_price = '$76,40'
+          endif
+
+          if card_url == blank and card_product.url != blank
+            assign card_url = card_product.url
+          endif
+
+          if card_url == blank
+            assign card_url = routes.all_products_collection_url
+          endif
+        %}
+
+        <article class="chambers-product-card" {{ block.shopify_attributes }}>
+          <a class="chambers-product-card__media" href="{{ card_url }}" aria-label="{{ card_title | escape }}">
+            {% if card_image != blank %}
+              {{
+                card_image
+                | image_url: width: 900
+                | image_tag:
+                  loading: 'lazy',
+                  class: 'chambers-product-card__image',
+                  widths: '360, 540, 720, 900',
+                  sizes: '(min-width: 990px) 33vw, (min-width: 750px) 50vw, 100vw',
+                  alt: card_title
+              }}
+            {% else %}
+              <div class="chambers-product-card__placeholder" aria-hidden="true">
+                {{ 'product-1' | placeholder_svg_tag: 'chambers-product-card__placeholder-svg' }}
+              </div>
+            {% endif %}
+          </a>
+
+          <div class="chambers-product-card__body">
+            <h2 class="chambers-product-card__title">
+              <a href="{{ card_url }}">{{ card_title }}</a>
+            </h2>
+
+            <p class="chambers-product-card__subtitle">{{ card_subtitle }}</p>
+            <p class="chambers-product-card__price">{{ card_price | strip }}</p>
+
+            <div class="chambers-product-card__actions">
+              {% if card_product != blank and card_variant.available %}
+                <form class="chambers-product-card__form" action="{{ routes.cart_add_url }}" method="post">
+                  <input type="hidden" name="id" value="{{ card_variant.id }}">
+                  <input type="hidden" name="quantity" value="1">
+                  <button class="chambers-product-card__button" type="submit" name="add">
+                    Add to cart
+                  </button>
+                </form>
+              {% elsif card_product != blank %}
+                <button class="chambers-product-card__button" type="button" disabled>
+                  Sold out
+                </button>
+              {% else %}
+                <button class="chambers-product-card__button" type="button" disabled>
+                  Add to cart
+                </button>
+              {% endif %}
+
+              <a class="chambers-product-card__details" href="{{ card_url }}">
+                <span>See details</span>
+                <span aria-hidden="true">&rarr;</span>
+              </a>
+            </div>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% endif %}
+</section>
+
+{% schema %}
+{
+  "name": "Chambers showcase",
+  "tag": "section",
+  "class": "chambers-showcase-section",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "background_image",
+      "label": "Background image"
+    },
+    {
+      "type": "select",
+      "id": "background_position",
+      "label": "Background position",
+      "options": [
+        {
+          "value": "center center",
+          "label": "Center"
+        },
+        {
+          "value": "center top",
+          "label": "Top"
+        },
+        {
+          "value": "center bottom",
+          "label": "Bottom"
+        },
+        {
+          "value": "left center",
+          "label": "Left"
+        },
+        {
+          "value": "right center",
+          "label": "Right"
+        }
+      ],
+      "default": "center center"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "product_card",
+      "name": "Product card",
+      "limit": 6,
+      "settings": [
+        {
+          "type": "product",
+          "id": "product",
+          "label": "Shopify product"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Custom image"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Custom title"
+        },
+        {
+          "type": "text",
+          "id": "subtitle",
+          "label": "Subtitle"
+        },
+        {
+          "type": "text",
+          "id": "price",
+          "label": "Custom price"
+        },
+        {
+          "type": "url",
+          "id": "details_link",
+          "label": "Details link"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Chambers of torture",
+      "category": "Custom",
+      "blocks": [
+        {
+          "type": "product_card",
+          "settings": {
+            "title": "Grimdark Dark Elves Set",
+            "subtitle": "The Remade | 12 Ready-to-Paint Figures",
+            "price": "$76,40"
+          }
+        },
+        {
+          "type": "product_card",
+          "settings": {
+            "title": "Grimdark Dark Elves Set",
+            "subtitle": "The Remade | 12 Ready-to-Paint Figures",
+            "price": "$76,40"
+          }
+        },
+        {
+          "type": "product_card",
+          "settings": {
+            "title": "Grimdark Dark Elves Set",
+            "subtitle": "The Remade | 12 Ready-to-Paint Figures",
+            "price": "$76,40"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
